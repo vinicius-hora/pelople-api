@@ -1,7 +1,6 @@
 package one.digitalinnovation.personapi.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +41,23 @@ public class PersonService {
 
 	public PersonDTO findById(Long id) throws PersonNotFoundException {
 		
-		Person person = personRepository.findById(id)
-		.orElseThrow(() -> new PersonNotFoundException(id));
+		Person person = verifyIfExists(id);
 		//Optional<Person> person = personRepository.findById(id);
 		/*if(person.isEmpty()) {
 			throw new PersonNotFoundException(id);
 		}*/
 		return personMapper.toDTO(person);
+		
+	}
+
+	private Person verifyIfExists(Long id) throws PersonNotFoundException {
+		return personRepository.findById(id)
+		.orElseThrow(() -> new PersonNotFoundException(id));
+	}
+
+	public void delete(Long id) throws PersonNotFoundException {
+		verifyIfExists(id);
+		personRepository.deleteById(id);
 		
 	}
 
