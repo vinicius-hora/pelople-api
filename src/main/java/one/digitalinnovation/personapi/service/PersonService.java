@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import lombok.AllArgsConstructor;
 import one.digitalinnovation.personapi.dto.request.PersonDTO;
 import one.digitalinnovation.personapi.dto.response.MessageResponseDTO;
 import one.digitalinnovation.personapi.entity.Person;
@@ -15,22 +16,19 @@ import one.digitalinnovation.personapi.mapper.PersonMapper;
 import one.digitalinnovation.personapi.repository.PersonRepository;
 
 @Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class PersonService {
 	
 	private PersonRepository personRepository;
 	
 	private final PersonMapper personMapper = PersonMapper.INSTANCE;
 	
-	@Autowired
-	public PersonService(PersonRepository personRepository) {
-		this.personRepository = personRepository;
-	}
+	
 	
 	public MessageResponseDTO createPerson(@RequestBody PersonDTO personDTO) {
 		Person personToSave = personMapper.toModel(personDTO);
 		Person savedPerson = personRepository.save(personToSave);
-		return MessageResponseDTO.builder().message("Created person with ID " + savedPerson.getId()).build();
-		
+		return createMessageResponse(savedPerson.getId(), "saved person with ID" );
 	}
 	
 	
@@ -50,15 +48,30 @@ public class PersonService {
 		
 	}
 
-	private Person verifyIfExists(Long id) throws PersonNotFoundException {
-		return personRepository.findById(id)
-		.orElseThrow(() -> new PersonNotFoundException(id));
-	}
 
 	public void delete(Long id) throws PersonNotFoundException {
 		verifyIfExists(id);
 		personRepository.deleteById(id);
 		
+	}
+
+	public MessageResponseDTO updateById(Long id, PersonDTO personDTO) throws PersonNotFoundException {
+		verifyIfExists(id);
+		
+		Person personToUpdate = personMapper.toModel(personDTO);
+		personToUpdate.setId(id);
+		Person updatePerson = personRepository.save(personToUpdate);
+		return createMessageResponse(updatePerson.getId(), "updated person with ID");
+		
+	}
+
+	private MessageResponseDTO createMessageResponse(Long id, String s) {
+		return MessageResponseDTO.builder().message(s + id).build();
+	}
+
+	private Person verifyIfExists(Long id) throws PersonNotFoundException {
+		return personRepository.findById(id)
+		.orElseThrow(() -> new PersonNotFoundException(id));
 	}
 
 	
